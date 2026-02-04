@@ -28,3 +28,6 @@ Thumbs.db
 
 # Jupyter notebooks checkpoints
 .ipynb_checkpoints/
+
+# Local audio files folder
+Alarms/
