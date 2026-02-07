@@ -59,7 +59,7 @@ for n in range(n_soundscapes):
                       source_time=('const', 0))
 
     # add random number of foreground events
-    n_events = np.random.randint(min_events, max_events + 1)
+    n_events = 1
     for _ in range(n_events):
         sc.add_event(label=('choose', []),
                      source_file=('choose', []),
