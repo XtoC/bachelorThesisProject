@@ -7,8 +7,8 @@ import os
 outfolder = 'audio/soundscapes/'
 
 # SCAPER SETTINGS
-fg_folder = 'audio/soundbank/foreground/'
-bg_folder = 'audio/soundbank/background/'
+fg_folder = 'audio/foreground_audio/'
+bg_folder = 'audio/background_audio/'
 
 n_soundscapes = 1000
 ref_db = -50
