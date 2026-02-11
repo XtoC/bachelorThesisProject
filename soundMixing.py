@@ -4,13 +4,13 @@ import os
 
 
 # OUTPUT FOLDER
-outfolder = 'audio/soundscapes/'
+outfolder = 'audio/soundscapes/Smoke_Alarm'
 
 # SCAPER SETTINGS
 fg_folder = 'audio/foreground_audio/'
 bg_folder = 'audio/background_audio/'
 
-n_soundscapes = 1000
+n_soundscapes = 1
 ref_db = -50
 duration = 10.0
 
@@ -31,7 +31,7 @@ event_duration_min = 0.5
 event_duration_max = 4.0
 
 snr_dist = 'uniform'
-snr_min = 6
+snr_min = 20
 snr_max = 30
 
 pitch_dist = 'uniform'
@@ -54,7 +54,7 @@ for n in range(n_soundscapes):
     sc.ref_db = ref_db
 
     # add background
-    sc.add_background(label=('const', 'noise'),
+    sc.add_background(label=('choose', []),
                       source_file=('choose', []),
                       source_time=('const', 0))
 
