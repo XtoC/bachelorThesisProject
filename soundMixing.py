@@ -1,84 +1,126 @@
 import scaper
 import numpy as np
 import os
+import csv
+import jams
+
+def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min, snr_max):
+    logfile = os.path.join(outfolder, "soundscape_log.csv")
+
+    # Write header once
+    with open(logfile, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["index", "soundscapes", "bg_label", "bg_filesource", "fg_label", "fg_filesource", "snr"])
+
+    # OUTPUT FOLDER
+    # outfolder = 'audio/soundscapes/Smoke_Alarm'
+
+    # SCAPER SETTINGS
+    # fg_folder = 'audio/foreground_audio/'
+    # bg_folder = 'audio/background_audio/'
+
+    # n_soundscapes = 1
+    ref_db = -50
+    duration = 10.0
+
+    min_events = 1
+    max_events = 9
+
+    event_time_dist = 'truncnorm'
+    event_time_mean = 5.0
+    event_time_std = 2.0
+    event_time_min = 0.0
+    event_time_max = 10.0
+
+    source_time_dist = 'const'
+    source_time = 0.0
+
+    event_duration_dist = 'uniform'
+    event_duration_min = 0.5
+    event_duration_max = 4.0
+
+    snr_dist = 'uniform'
+    # snr_min = 20
+    # snr_max = 30
+
+    pitch_dist = 'uniform'
+    pitch_min = -3.0
+    pitch_max = 3.0
+
+    time_stretch_dist = 'uniform'
+    time_stretch_min = 0.8
+    time_stretch_max = 1.2
+
+    # Generate 1000 soundscapes using a truncated normal distribution of start times
+
+    for n in range(n_soundscapes):
+
+        print('Generating soundscape: {:d}/{:d}'.format(n + 1, n_soundscapes))
+
+        # create a scaper
+        sc = scaper.Scaper(duration, fg_folder, bg_folder)
+        sc.protected_labels = []
+        sc.ref_db = ref_db
+
+        # add background
+        sc.add_background(label=('choose', []),
+                          source_file=('choose', []),
+                          source_time=('const', 0))
+
+        # add random number of foreground events
+        n_events = 1
+        for _ in range(n_events):
+            sc.add_event(label=('const', fg_type),
+                         source_file=('choose', []),
+                         source_time=(source_time_dist, source_time),
+                         event_time=(event_time_dist, event_time_mean, event_time_std, event_time_min, event_time_max),
+                         event_duration=(event_duration_dist, event_duration_min, event_duration_max),
+                         snr=(snr_dist, snr_min, snr_max),
+                         pitch_shift=(pitch_dist, pitch_min, pitch_max),
+                         time_stretch=(time_stretch_dist, time_stretch_min, time_stretch_max))
+
+        # generate
+        audiofile = os.path.join(outfolder, "soundscape_unimodal{:d}.wav".format(n))
+        jamsfile = os.path.join(outfolder, "soundscape_unimodal{:d}.jams".format(n))
+        txtfile = os.path.join(outfolder, "soundscape_unimodal{:d}.txt".format(n))
+
+        sc.generate(audiofile, jamsfile,
+                    allow_repeated_label=True,
+                    allow_repeated_source=False,
+                    reverb=0.1,
+                    disable_sox_warnings=True,
+                    no_audio=False,
+                    txt_path=txtfile)
+
+        # ---- Extract SNRs (and more) from the JAMS we just wrote ----
+        jam = jams.load(jamsfile)
+        ann = jam.annotations.search(namespace='scaper')[0]
+
+        fg_filesource = None
+        bg_filesource = None
+        bg_label = None
+        fg_label = None
+        snr_val = None
+
+        for obs in ann.data:
+            val = obs.value
+            role = val.get('role')
+
+            if role == 'background' and bg_filesource is None:
+                bg_label = val.get('label')
+                bg_filesource = val.get('source_file')
+
+            if role == 'foreground':
+                fg_label = val.get('label')
+                fg_filesource = val.get('source_file')
+                snr_val = val.get('snr')
 
 
-# OUTPUT FOLDER
-outfolder = 'audio/soundscapes/Smoke_Alarm'
+        # Append to CSV
+        with open(logfile, "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([n+1, "soundscape_unimodal{:d}.wav".format(n), bg_label, bg_filesource, fg_label, fg_filesource, snr_val])
 
-# SCAPER SETTINGS
-fg_folder = 'audio/foreground_audio/'
-bg_folder = 'audio/background_audio/'
-
-n_soundscapes = 1
-ref_db = -50
-duration = 10.0
-
-min_events = 1
-max_events = 9
-
-event_time_dist = 'truncnorm'
-event_time_mean = 5.0
-event_time_std = 2.0
-event_time_min = 0.0
-event_time_max = 10.0
-
-source_time_dist = 'const'
-source_time = 0.0
-
-event_duration_dist = 'uniform'
-event_duration_min = 0.5
-event_duration_max = 4.0
-
-snr_dist = 'uniform'
-snr_min = 20
-snr_max = 30
-
-pitch_dist = 'uniform'
-pitch_min = -3.0
-pitch_max = 3.0
-
-time_stretch_dist = 'uniform'
-time_stretch_min = 0.8
-time_stretch_max = 1.2
-
-# Generate 1000 soundscapes using a truncated normal distribution of start times
-
-for n in range(n_soundscapes):
-
-    print('Generating soundscape: {:d}/{:d}'.format(n + 1, n_soundscapes))
-
-    # create a scaper
-    sc = scaper.Scaper(duration, fg_folder, bg_folder)
-    sc.protected_labels = []
-    sc.ref_db = ref_db
-
-    # add background
-    sc.add_background(label=('choose', []),
-                      source_file=('choose', []),
-                      source_time=('const', 0))
-
-    # add random number of foreground events
-    n_events = 1
-    for _ in range(n_events):
-        sc.add_event(label=('choose', []),
-                     source_file=('choose', []),
-                     source_time=(source_time_dist, source_time),
-                     event_time=(event_time_dist, event_time_mean, event_time_std, event_time_min, event_time_max),
-                     event_duration=(event_duration_dist, event_duration_min, event_duration_max),
-                     snr=(snr_dist, snr_min, snr_max),
-                     pitch_shift=(pitch_dist, pitch_min, pitch_max),
-                     time_stretch=(time_stretch_dist, time_stretch_min, time_stretch_max))
-
-    # generate
-    audiofile = os.path.join(outfolder, "soundscape_unimodal{:d}.wav".format(n))
-    jamsfile = os.path.join(outfolder, "soundscape_unimodal{:d}.jams".format(n))
-    txtfile = os.path.join(outfolder, "soundscape_unimodal{:d}.txt".format(n))
-
-    sc.generate(audiofile, jamsfile,
-                allow_repeated_label=True,
-                allow_repeated_source=False,
-                reverb=0.1,
-                disable_sox_warnings=True,
-                no_audio=False,
-                txt_path=txtfile)
+if __name__ == "__main__":
+    sound_mix("audio/soundscapes/Smoke_Alarm", "audio/foreground_audio/train_audio",
+              "audio/background_audio/train_audio", "Smoke_alarm", 2, 20, 30)
