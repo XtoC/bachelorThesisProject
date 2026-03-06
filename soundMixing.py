@@ -4,7 +4,9 @@ import os
 import csv
 import jams
 
-def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min, snr_max):
+Alarm_types = ["Smoke_alarm", "Fire_alarm_bell", "Fire_alarm_electronic", "Air_siren"]
+
+def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min, snr_max, start_id):
     logfile = os.path.join(outfolder, "soundscape_log.csv")
 
     # Write header once
@@ -80,9 +82,9 @@ def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min,
                          time_stretch=(time_stretch_dist, time_stretch_min, time_stretch_max))
 
         # generate
-        audiofile = os.path.join(outfolder, "soundscape_unimodal{:d}.wav".format(n))
-        jamsfile = os.path.join(outfolder, "soundscape_unimodal{:d}.jams".format(n))
-        txtfile = os.path.join(outfolder, "soundscape_unimodal{:d}.txt".format(n))
+        audiofile = os.path.join(outfolder, "soundscape_unimodal{:d}.wav".format(start_id+n))
+        jamsfile = os.path.join(outfolder, "soundscape_unimodal{:d}.jams".format(start_id+n))
+        txtfile = os.path.join(outfolder, "soundscape_unimodal{:d}.txt".format(start_id+n))
 
         sc.generate(audiofile, jamsfile,
                     allow_repeated_label=True,
@@ -119,8 +121,29 @@ def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min,
         # Append to CSV
         with open(logfile, "a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([n+1, "soundscape_unimodal{:d}.wav".format(n), bg_label, bg_filesource, fg_label, fg_filesource, snr_val])
+            writer.writerow([start_id+n, "soundscape_unimodal{:d}.wav".format(start_id+n), bg_label, bg_filesource, fg_label, fg_filesource, snr_val])
+
+def generate_train_data():
+    for alarm_type in Alarm_types:
+        outfolder = os.path.join("audio/soundscapes/train_audio/", alarm_type)
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/brownian_noise", alarm_type,
+                  20, 20, 30, 1)
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/brownian_noise", alarm_type,
+                  20, 6, 10, 21)
+
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/background_audio/train_audio", alarm_type,
+                  50, 20, 30, 41)
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/background_audio/train_audio", alarm_type,
+                  50, 6, 10, 91)
 
 if __name__ == "__main__":
-    sound_mix("audio/soundscapes/Smoke_Alarm", "audio/foreground_audio/train_audio",
-              "audio/background_audio/train_audio", "Smoke_alarm", 2, 20, 30)
+    # sound_mix("audio/soundscapes/train_audio/Smoke_alarm", "audio/foreground_audio/train_audio",
+    #           "audio/brownian_noise", "Smoke_alarm", 20, 20, 30, 1)
+    # sound_mix("audio/soundscapes/train_audio/Smoke_alarm", "audio/foreground_audio/train_audio",
+    #           "audio/brownian_noise", "Smoke_alarm", 20, 6, 10, 21)
+    #
+    # sound_mix("audio/soundscapes/train_audio/Smoke_alarm", "audio/foreground_audio/train_audio",
+    #           "audio/background_audio/train_audio", "Smoke_alarm", 50, 20, 30, 41)
+    # sound_mix("audio/soundscapes/train_audio/Smoke_alarm", "audio/foreground_audio/train_audio",
+    #           "audio/background_audio/train_audio", "Smoke_alarm", 50, 6, 10, 91)
+    generate_train_data()
