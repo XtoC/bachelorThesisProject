@@ -35,9 +35,10 @@ def log_mel_spectrogram(
     )
 
     # 3) Log compression (dB)
-    S_db = librosa.power_to_db(S, ref=ref, top_db=None)  # dB scale
+    #S_db = librosa.power_to_db(S, ref=ref, top_db=None)  # dB scale
+    #lm = np.log(S + np.finfo(S.dtype).eps)
 
-    np.save(out_path, S_db.astype(np.float32))
+    np.save(out_path, S.astype(np.float32))
 
 if __name__ == "__main__":
     soundscapes_folder = "audio/soundscapes"
