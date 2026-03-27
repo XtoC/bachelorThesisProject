@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from torch.utils.data import Dataset
+import torch
 
 class SpectrogramDataset(Dataset):
     def __init__(self, features_path):
@@ -24,4 +25,7 @@ class SpectrogramDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx]
+        x,y = self.data[idx]
+        x = torch.from_numpy(x).float()
+        x = x.unsqueeze(0)
+        return x,y

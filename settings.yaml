@@ -1,0 +1,13 @@
+
+cache_dir: "cache"
+
+batch_size: 32
+num_dataloader_workers: 4
+
+learning_rate: 0.001
+warmup_pct: 0.1
+n_epochs: 30
+log_interval: 20
+max_mixup: 0.3
+
+train_segment_length: null

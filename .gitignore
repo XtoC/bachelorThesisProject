@@ -33,3 +33,6 @@ Thumbs.db
 # Local audio files folder
 Alarms/
 audio/
+
+# model checkpoint
+model_checkpoint.pt
