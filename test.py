@@ -18,7 +18,7 @@ def main():
     batch_size = cfg.get('batch_size', 64)
     num_workers = cfg.get('num_dataloader_workers', 8)
 
-    ds_test = SpectrogramDataset("audio/features_audio/test_audio")
+    ds_test = SpectrogramDataset(cfg.get('test_folder'))
     test_loader = torch.utils.data.DataLoader(ds_test, batch_size=batch_size, num_workers=num_workers)
 
     # evaluating after training:

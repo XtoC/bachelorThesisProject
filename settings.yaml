@@ -4,10 +4,15 @@ cache_dir: "cache"
 batch_size: 32
 num_dataloader_workers: 4
 
-learning_rate: 0.001
-warmup_pct: 0.1
+learning_rate: 1.0e-4
+warmup_pct: 0.0
 n_epochs: 30
 log_interval: 20
 max_mixup: 0.3
 
 train_segment_length: null
+
+train_folder: "audio/features_audio/train_audio/Low_snr"
+val_folder: "audio/features_audio/validation_audio/Low_snr"
+test_folder: "audio/features_audio/test_audio/Low_snr"
+

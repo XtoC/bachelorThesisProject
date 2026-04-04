@@ -3,8 +3,9 @@ import os
 import numpy as np
 
 Alarm_types = ["Smoke_alarm", "Fire_alarm_bell", "Fire_alarm_electronic", "Air_siren"]
+snr_types = ["High_snr", "Low_snr", "High_low_snr"]
 
-def log_mel_spectrogram(
+def mel_spectrogram(
     in_path: str,
     out_path: str,
     sr_target: int = 24000,
@@ -48,12 +49,22 @@ if __name__ == "__main__":
         sub_dir_features = os.path.join(features_folder, dir)
         if os.path.isdir(sub_dir_soundscapes):
             for dir in os.listdir(sub_dir_soundscapes):
-                alarm_dir_soundscapes = os.path.join(sub_dir_soundscapes, dir)
-                alarm_dir_features = os.path.join(sub_dir_features, dir)
-                if os.path.isdir(alarm_dir_soundscapes):
-                    for filename in os.listdir(alarm_dir_soundscapes):
-                        if not filename.lower().endswith(".wav"):
+                if dir not in snr_types:
+                    continue
+                snr_dir_soundscapes = os.path.join(sub_dir_soundscapes, dir)
+                snr_dir_features = os.path.join(sub_dir_features, dir)
+                if os.path.isdir(snr_dir_soundscapes):
+                    for dir in os.listdir(snr_dir_soundscapes):
+                        if not dir in Alarm_types:
                             continue
-                        file_inpath = os.path.join(alarm_dir_soundscapes, filename)
-                        file_outpath = os.path.join(alarm_dir_features, filename.replace(".wav", ".npy"))
-                        log_mel_spectrogram(file_inpath, file_outpath)
+                        alarm_dir_soundscapes = os.path.join(snr_dir_soundscapes, dir)
+                        alarm_dir_features = os.path.join(snr_dir_features, dir)
+                        if os.path.isdir(alarm_dir_soundscapes):
+                            for filename in os.listdir(alarm_dir_soundscapes):
+                                if not filename.lower().endswith(".wav"):
+                                    continue
+                                file_inpath = os.path.join(alarm_dir_soundscapes, filename)
+                                file_outpath = os.path.join(alarm_dir_features, filename.replace(".wav", ".npy"))
+                                #print(file_inpath)
+                                #print(file_outpath)
+                                mel_spectrogram(file_inpath, file_outpath)

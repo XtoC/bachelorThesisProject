@@ -94,7 +94,7 @@ def main(config_fn='settings.yaml'):
     cfg = read_yaml(config_fn)
     logger = init_log('train')
     device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
-
+    logger.info(f"{device}")
     cache_dir = Path(cfg.get('cache_dir', 'cache'))
 
     data_fn = cache_dir / 'bsd10k-data.hdf'
@@ -116,9 +116,9 @@ def main(config_fn='settings.yaml'):
     #train_val_idx, test_idx = train_test_split(np.arange(n_files), test_size=0.3)
     #train_idx, val_idx = train_test_split(train_val_idx, test_size=0.1, random_state=303)
 
-    ds_train = SpectrogramDataset("audio/features_audio/train_audio")
-    ds_val = SpectrogramDataset("audio/features_audio/validation_audio")
-    ds_test = SpectrogramDataset("audio/features_audio/test_audio")
+    ds_train = SpectrogramDataset(cfg.get('train_folder'))
+    ds_val = SpectrogramDataset(cfg.get('val_folder'))
+    ds_test = SpectrogramDataset(cfg.get('test_folder'))
 
     logger.info(f'training data size {len(ds_train)}, validation data size {len(ds_val)}, test data size {len(ds_test)}')
 

@@ -6,7 +6,7 @@ import jams
 
 Alarm_types = ["Smoke_alarm", "Fire_alarm_bell", "Fire_alarm_electronic", "Air_siren"]
 
-def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min, snr_max, start_id, filename):
+def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min, snr_max, start_id, filename=None):
     logfile = os.path.join(outfolder, "soundscape_log.csv")
 
     # Write header once
@@ -20,7 +20,8 @@ def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min,
     # SCAPER SETTINGS
     # fg_folder = 'audio/foreground_audio/'
     # bg_folder = 'audio/background_audio/'
-    file_folder = os.path.join(os.path.join(fg_folder, fg_type), filename)
+    if filename is not None:
+        file_folder = os.path.join(os.path.join(fg_folder, fg_type), filename)
 
     # n_soundscapes = 1
     ref_db = -50
@@ -74,7 +75,7 @@ def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min,
         n_events = 1
         for _ in range(n_events):
             sc.add_event(label=('const', fg_type),
-                         source_file=('const', file_folder),
+                         source_file=('choose', []),
                          source_time=(source_time_dist, source_time),
                          event_time=(event_time_dist, event_time_mean, event_time_std, event_time_min, event_time_max),
                          event_duration=(event_duration_dist, event_duration_min, event_duration_max),
@@ -126,70 +127,121 @@ def sound_mix (outfolder, fg_folder, bg_folder, fg_type, n_soundscapes, snr_min,
 
 def generate_train_data():
     for alarm_type in Alarm_types:
-        outfolder = os.path.join("audio/soundscapes/train_audio/", alarm_type)
+        outfolder = os.path.join("audio/soundscapes/train_audio/High_snr", alarm_type)
         sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/brownian_noise", alarm_type,
                   20, 20, 30, 1)
-        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/brownian_noise", alarm_type,
-                  20, 6, 10, 21)
-
         sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/background_audio/train_audio", alarm_type,
-                  50, 20, 30, 41)
+                  50, 20, 30, 21)
+
+        outfolder = os.path.join("audio/soundscapes/train_audio/Low_snr", alarm_type)
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/brownian_noise", alarm_type,
+                  20, 6, 10, 1)
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/background_audio/train_audio", alarm_type,
+                  50, 6, 10, 21)
+
+        outfolder = os.path.join("audio/soundscapes/train_audio/High_low_snr", alarm_type)
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/brownian_noise", alarm_type,
+                  20, 20, 30, 1)
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/background_audio/train_audio", alarm_type,
+                  50, 20, 30, 21)
+        sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/brownian_noise", alarm_type,
+                  20, 6, 10, 71)
         sound_mix(outfolder, "audio/foreground_audio/train_audio", "audio/background_audio/train_audio", alarm_type,
                   50, 6, 10, 91)
+
+
 
 def generate_test_data():
     test_folder = "audio/foreground_audio/test_audio"
     for dir in os.listdir(test_folder):
         sub_dir = os.path.join(test_folder, dir)
         # print(dir, sub_dir)
-        outfolder = os.path.join("audio/soundscapes/test_audio", dir)
+        # outfolder = os.path.join("audio/soundscapes/test_audio", dir)
         if os.path.isdir(sub_dir):
             start_id = 1
+            start_id_2 = 1
             for filename in os.listdir(sub_dir):
                 if filename == ".DS_Store":
                     continue
-                sound_mix(outfolder, "audio/foreground_audio/test_audio", "audio/brownian_noise", dir,
-                          1, 20, 30, start_id, filename)
-                start_id += 1
+                high_outfolder = os.path.join("audio/soundscapes/test_audio/High_snr", dir)
+                low_outfolder = os.path.join("audio/soundscapes/test_audio/Low_snr", dir)
+                highlow_outfolder = os.path.join("audio/soundscapes/test_audio/High_low_snr", dir)
 
-                sound_mix(outfolder, "audio/foreground_audio/test_audio", "audio/brownian_noise", dir,
+                sound_mix(high_outfolder, "audio/foreground_audio/test_audio", "audio/brownian_noise", dir,
+                          1, 20, 30, start_id, filename)
+
+                sound_mix(low_outfolder, "audio/foreground_audio/test_audio", "audio/brownian_noise", dir,
                           1, 6, 10, start_id, filename)
                 start_id += 1
 
-                sound_mix(outfolder, "audio/foreground_audio/test_audio", "audio/background_audio/test_audio", dir,
+                sound_mix(high_outfolder, "audio/foreground_audio/test_audio", "audio/background_audio/test_audio", dir,
                           2, 20, 30, start_id, filename)
-                start_id += 2
 
-                sound_mix(outfolder, "audio/foreground_audio/test_audio", "audio/background_audio/test_audio", dir,
+                sound_mix(low_outfolder, "audio/foreground_audio/test_audio", "audio/background_audio/test_audio", dir,
                           2, 6, 10, start_id, filename)
                 start_id += 2
+
+                # High_low combine
+                sound_mix(highlow_outfolder, "audio/foreground_audio/test_audio", "audio/brownian_noise", dir,
+                          1, 20, 30, start_id_2, filename)
+                start_id_2 += 1
+                sound_mix(highlow_outfolder, "audio/foreground_audio/test_audio", "audio/brownian_noise", dir,
+                          1, 6, 10, start_id_2, filename)
+                start_id_2 += 1
+
+                sound_mix(highlow_outfolder, "audio/foreground_audio/test_audio", "audio/background_audio/test_audio", dir,
+                          2, 20, 30, start_id_2, filename)
+                start_id_2 += 2
+                sound_mix(highlow_outfolder, "audio/foreground_audio/test_audio", "audio/background_audio/test_audio", dir,
+                          2, 6, 10, start_id_2, filename)
+                start_id_2 += 2
 
 def generate_validation_data():
     validation_folder = "audio/foreground_audio/validation_audio"
     for dir in os.listdir(validation_folder):
         sub_dir = os.path.join(validation_folder, dir)
         # print(dir, sub_dir)
-        outfolder = os.path.join("audio/soundscapes/validation_audio", dir)
+        #outfolder = os.path.join("audio/soundscapes/validation_audio", dir)
         if os.path.isdir(sub_dir):
             start_id = 1
+            start_id_2 = 1
             for filename in os.listdir(sub_dir):
                 if filename == ".DS_Store":
                     continue
-                sound_mix(outfolder, "audio/foreground_audio/validation_audio", "audio/brownian_noise", dir,
-                          1, 20, 30, start_id, filename)
-                start_id += 1
+                high_outfolder = os.path.join("audio/soundscapes/validation_audio/High_snr", dir)
+                low_outfolder = os.path.join("audio/soundscapes/validation_audio/Low_snr", dir)
+                highlow_outfolder = os.path.join("audio/soundscapes/validation_audio/High_low_snr", dir)
 
-                sound_mix(outfolder, "audio/foreground_audio/validation_audio", "audio/brownian_noise", dir,
+                sound_mix(high_outfolder, "audio/foreground_audio/validation_audio", "audio/brownian_noise", dir,
+                          1, 20, 30, start_id, filename)
+
+                sound_mix(low_outfolder, "audio/foreground_audio/validation_audio", "audio/brownian_noise", dir,
                           1, 6, 10, start_id, filename)
                 start_id += 1
 
-                sound_mix(outfolder, "audio/foreground_audio/validation_audio", "audio/background_audio/validation_audio", dir,
+                sound_mix(high_outfolder, "audio/foreground_audio/validation_audio", "audio/background_audio/validation_audio", dir,
                           2, 20, 30, start_id, filename)
-                start_id += 2
 
-                sound_mix(outfolder, "audio/foreground_audio/validation_audio", "audio/background_audio/validation_audio", dir,
+                sound_mix(low_outfolder, "audio/foreground_audio/validation_audio", "audio/background_audio/validation_audio", dir,
                           2, 6, 10, start_id, filename)
                 start_id += 2
+
+                # High low combine
+                sound_mix(highlow_outfolder, "audio/foreground_audio/validation_audio", "audio/brownian_noise", dir,
+                          1, 20, 30, start_id_2, filename)
+                start_id_2 += 1
+                sound_mix(highlow_outfolder, "audio/foreground_audio/validation_audio", "audio/brownian_noise", dir,
+                          1, 6, 10, start_id_2, filename)
+                start_id_2 += 1
+
+                sound_mix(highlow_outfolder, "audio/foreground_audio/validation_audio",
+                          "audio/background_audio/validation_audio", dir,
+                          2, 20, 30, start_id_2, filename)
+                start_id_2 += 2
+                sound_mix(highlow_outfolder, "audio/foreground_audio/validation_audio",
+                          "audio/background_audio/validation_audio", dir,
+                          2, 6, 10, start_id_2, filename)
+                start_id_2 += 2
 
 if __name__ == "__main__":
     # sound_mix("audio/soundscapes/train_audio/Smoke_alarm", "audio/foreground_audio/train_audio",
@@ -203,5 +255,5 @@ if __name__ == "__main__":
     #           "audio/background_audio/train_audio", "Smoke_alarm", 50, 6, 10, 91)
 
     #generate_train_data()
-    #generate_test_data()
+    generate_test_data()
     generate_validation_data()
